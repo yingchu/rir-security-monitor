@@ -1,1 +1,47 @@
+name: Daily RIR Security Pipeline
 
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 02:00 UTC = 10:00 Asia/Taipei
+  workflow_dispatch:       # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        run: |
+          python3 step1_download_and_parse.py
+          python3 step2_explore.py
+          python3 step3_detect_anomalies.py
+          python3 step4_alert_report.py
+          python3 step4_alert_report_en.py
+
+      - name: Update demo pages
+        run: |
+          DATE=$(date +%Y%m%d)
+          cp rir_data/alerts/security_report_${DATE}_en.html docs/index.html
+          cp rir_data/alerts/security_report_${DATE}.html   docs/zh.html
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html docs/zh.html
+          git diff --staged --quiet || git commit -m "Daily update: $(date +%Y-%m-%d)"
+          git push
