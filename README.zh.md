@@ -2,7 +2,7 @@
 
 # RIR 安全監控系統
 
-**[→ 示範報告頁面](https://yingchu.github.io/rir-security-monitor/)**
+**[→ 示範報告頁面（中文）](https://yingchu.github.io/rir-security-monitor/zh.html)** ｜ **[English](https://yingchu.github.io/rir-security-monitor/)**
 
 針對全球五大區域網路資訊中心（RIR）的網路號碼資源異常取得行為進行早期預警：**APNIC、RIPE NCC、ARIN、LACNIC、AFRINIC**。
 
