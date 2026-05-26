@@ -38,7 +38,7 @@ Signals it looks for:
 pip install -r requirements.txt
 ```
 
-Python 3.10+. The `whois` CLI must also be available on your system (`brew install whois` on macOS, `apt install whois` on Debian/Ubuntu).
+Python 3.10+. No system dependencies beyond pip packages — WHOIS enrichment uses each RIR's public RDAP endpoint directly via `requests`.
 
 ## Usage
 
@@ -93,14 +93,14 @@ For each `opaque_id`, finds cases where an ASN and at least one IPv4 block were 
 
 ## WHOIS Enrichment
 
-High-risk alerts are automatically enriched with WHOIS data at report generation time (`whois_enrich.py`). For each flagged `opaque_id`, the pipeline:
+High-risk alerts are automatically enriched with registration data at report generation time (`whois_enrich.py`). For each flagged `opaque_id`, the pipeline:
 
 1. Looks up the associated IPv4 start address or ASN from the delegation files
-2. Runs a system `whois` query against it
-3. Parses entity name, description, and registered country
+2. Determines the correct RIR from the delegation record and queries that RIR's public **RDAP** endpoint (e.g. `rdap.apnic.net`, `rdap.db.ripe.net`)
+3. Parses registrant name, description, and registered country from the structured JSON response
 4. Embeds the results in a summary table at the top of the HTML report
 
-This lets recipients immediately see who holds the flagged resource without performing manual WHOIS lookups. Results should be verified independently — WHOIS data may be incomplete or inaccurate.
+RDAP is the modern structured replacement for legacy WHOIS text queries. Using it directly means no system `whois` binary is required and field extraction is reliable across all RIRs. Results should still be verified independently — registration data may be incomplete or outdated.
 
 ## Key Concepts
 

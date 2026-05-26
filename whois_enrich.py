@@ -1,92 +1,102 @@
 """
-WHOIS enrichment for high-risk alert items.
-Looks up the IPv4/ASN associated with each opaque_id and runs system whois.
+WHOIS enrichment via RDAP (Registration Data Access Protocol).
+Uses each RIR's public RDAP endpoint — no system whois binary required.
 """
 
-import subprocess
-import re
 import time
+import re
+import requests
 from pathlib import Path
 from functools import lru_cache
 
 # Guard rails
-MAX_RESPONSE_BYTES = 64 * 1024       # 64 KB per WHOIS response
-MAX_FIELD_LEN      = 200             # truncate any single parsed field
-QUERY_INTERVAL     = 1.0             # seconds between whois calls (rate limiting)
+MAX_FIELD_LEN  = 200
+QUERY_INTERVAL = 1.0   # seconds between requests (rate limiting)
 
-WHOIS_FIELDS = [
-    "netname", "as-name", "org-name", "orgname", "OrgName",
-    "descr", "owner", "person", "role", "country", "Country",
-]
-
-SUMMARY_FIELDS = {
-    "name":    ["netname", "as-name", "OrgName", "orgname", "org-name", "owner"],
-    "descr":   ["descr"],
-    "contact": ["person", "role"],
-    "country": ["country", "Country"],
+RDAP_BASE = {
+    "apnic":   "https://rdap.apnic.net",
+    "ripencc": "https://rdap.db.ripe.net",
+    "arin":    "https://rdap.arin.net/registry",
+    "lacnic":  "https://rdap.lacnic.net/rdap",
+    "afrinic": "https://rdap.afrinic.net/rdap",
 }
 
-# Valid query targets only — prevents garbage from delegation files reaching whois
 _IPV4_RE = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
-_ASN_RE  = re.compile(r"^AS\d{1,10}$")
+_ASN_RE  = re.compile(r"^\d{1,10}$")
 
 
-def _validate_target(target: str) -> bool:
-    if _ASN_RE.match(target):
-        return True
-    if _IPV4_RE.match(target):
-        octets = [int(o) for o in target.split(".")]
-        return all(0 <= o <= 255 for o in octets)
-    return False
+def _validate_ip(ip: str) -> bool:
+    if not _IPV4_RE.match(ip):
+        return False
+    return all(0 <= int(o) <= 255 for o in ip.split("."))
+
+
+def _rdap_url(rtype: str, start: str, registry: str) -> str | None:
+    base = RDAP_BASE.get(registry)
+    if not base:
+        return None
+    if rtype == "ipv4" and _validate_ip(start):
+        return f"{base}/ip/{start}"
+    if rtype == "asn" and _ASN_RE.match(start):
+        return f"{base}/autnum/{start}"
+    return None
+
+
+def _vcard_fn(vcard_array: list) -> str:
+    """Extract 'fn' (full name) from a vCard array."""
+    if len(vcard_array) < 2:
+        return ""
+    for item in vcard_array[1]:
+        if isinstance(item, list) and item[0] == "fn":
+            return str(item[3])[:MAX_FIELD_LEN]
+    return ""
+
+
+def _parse_rdap(data: dict) -> dict:
+    name    = str(data.get("name", ""))[:MAX_FIELD_LEN]
+    country = str(data.get("country", ""))[:8]
+
+    # First remark as description
+    descr = ""
+    for remark in data.get("remarks", []):
+        lines = remark.get("description", [])
+        if lines:
+            descr = str(lines[0])[:MAX_FIELD_LEN]
+            break
+
+    # Registrant fn from entities
+    org = ""
+    for entity in data.get("entities", []):
+        roles = entity.get("roles", [])
+        if "registrant" in roles:
+            vcard = entity.get("vcardArray", [])
+            fn = _vcard_fn(vcard)
+            if fn:
+                org = fn
+                break
+
+    return {
+        "name":    name,
+        "descr":   org or descr,
+        "country": country,
+        "contact": "",
+    }
 
 
 @lru_cache(maxsize=256)
-def _whois_raw(target: str) -> str:
-    if not _validate_target(target):
-        return ""
+def _rdap_query(url: str) -> dict:
     try:
-        result = subprocess.run(
-            ["whois", target],
-            capture_output=True, timeout=10
-        )
-        # Decode only what we need, cap at MAX_RESPONSE_BYTES
-        raw = result.stdout[:MAX_RESPONSE_BYTES].decode("utf-8", errors="replace")
-        return raw
+        resp = requests.get(url, timeout=10, headers={"Accept": "application/rdap+json"})
+        if resp.status_code == 200:
+            return _parse_rdap(resp.json())
     except Exception:
-        return ""
-
-
-def _parse(raw: str) -> dict:
-    parsed = {}
-    for line in raw.splitlines():
-        line = line.strip()
-        if not line or line.startswith("%") or line.startswith("#"):
-            continue
-        m = re.match(r"^([^:]+):\s*(.+)$", line)
-        if not m:
-            continue
-        key = m.group(1).strip()
-        val = m.group(2).strip()[:MAX_FIELD_LEN]
-        if key in WHOIS_FIELDS and key not in parsed:
-            parsed[key] = val
-    return parsed
-
-
-def _summarise(parsed: dict) -> dict:
-    out = {}
-    for label, keys in SUMMARY_FIELDS.items():
-        for k in keys:
-            if k in parsed:
-                out[label] = parsed[k]
-                break
-        else:
-            out[label] = ""
-    return out
+        pass
+    return {"name": "", "descr": "", "country": "", "contact": ""}
 
 
 def load_opaque_resources(rir_data_dir: Path, opaque_ids: set) -> dict:
-    """Return {opaque_id: {"ipv4": ip_or_None, "asn": asn_or_None}}"""
-    result = {oid: {"ipv4": None, "asn": None} for oid in opaque_ids}
+    """Return {opaque_id: {"ipv4": ..., "asn": ..., "registry": ...}}"""
+    result = {oid: {"ipv4": None, "asn": None, "registry": None} for oid in opaque_ids}
     for txt in rir_data_dir.glob("delegated-*-latest.txt"):
         with open(txt, encoding="utf-8", errors="ignore") as f:
             for line in f:
@@ -99,11 +109,14 @@ def load_opaque_resources(rir_data_dir: Path, opaque_ids: set) -> dict:
                 oid = parts[7]
                 if oid not in opaque_ids:
                     continue
-                rtype, start = parts[2], parts[3]
+                registry, rtype, start = parts[0], parts[2], parts[3]
                 if rtype == "ipv4" and result[oid]["ipv4"] is None:
-                    result[oid]["ipv4"] = start
+                    result[oid]["ipv4"]     = start
+                    result[oid]["registry"] = registry
                 elif rtype == "asn" and result[oid]["asn"] is None:
-                    result[oid]["asn"] = start
+                    result[oid]["asn"]      = start
+                    if result[oid]["registry"] is None:
+                        result[oid]["registry"] = registry
     return result
 
 
@@ -113,22 +126,32 @@ def enrich(opaque_ids: set, rir_data_dir: Path) -> dict:
                           "contact": str, "country": str}}
     """
     resources = load_opaque_resources(rir_data_dir, opaque_ids)
-    enriched = {}
+    enriched  = {}
     first = True
+
     for oid, res in resources.items():
-        raw_target = res["ipv4"] or (f"AS{res['asn']}" if res["asn"] else None)
-        if not raw_target:
+        registry = res.get("registry") or ""
+
+        # Prefer IPv4 for lookup; fall back to ASN
+        if res["ipv4"]:
+            rtype, start = "ipv4", res["ipv4"]
+        elif res["asn"]:
+            rtype, start = "asn", res["asn"]
+        else:
             enriched[oid] = {"query": "", "name": "", "descr": "", "contact": "", "country": ""}
             continue
 
-        # Rate limit: pause between queries (cache hits skip this)
-        cache_info = _whois_raw.cache_info()
+        url = _rdap_url(rtype, start, registry)
+        if not url:
+            enriched[oid] = {"query": "", "name": "", "descr": "", "contact": "", "country": ""}
+            continue
+
         if not first:
             time.sleep(QUERY_INTERVAL)
         first = False
 
-        raw = _whois_raw(raw_target)
-        summary = _summarise(_parse(raw))
-        summary["query"] = raw_target if _validate_target(raw_target) else ""
-        enriched[oid] = summary
+        info = _rdap_query(url)
+        info["query"] = start
+        enriched[oid] = info
+
     return enriched
