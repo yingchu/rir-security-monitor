@@ -1,1 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RIR Network Security Alert Report 20260526</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; background:#f5f7fa; color:#222; }
+    header { background:#1a237e; color:#fff; padding:32px 40px; }
+    header h1 { font-size:1.6rem; font-weight:700; }
+    header p  { margin-top:6px; font-size:.9rem; opacity:.85; }
+    .container { max-width:1200px; margin:0 auto; padding:32px 24px; }
+    .kpi-bar { display:flex; gap:16px; margin-bottom:32px; flex-wrap:wrap; }
+    .kpi { background:#fff; border-radius:8px; padding:20px 28px; flex:1;
+             min-width:140px; box-shadow:0 1px 4px rgba(0,0,0,.1); text-align:center; }
+    .kpi .num { font-size:2.2rem; font-weight:700; }
+    .kpi .label { font-size:.8rem; color:#666; margin-top:4px; }
+    .kpi.high .num { color:#d32f2f; }
+    .kpi.mid  .num { color:#f57c00; }
+    .kpi.low  .num { color:#388e3c; }
+    .cards { display:flex; flex-direction:column; gap:14px; margin-bottom:36px; }
+    .card { display:flex; align-items:flex-start; gap:16px; padding:18px 20px;
+             border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+    .card-icon { font-size:2rem; line-height:1; }
+    .card-title { font-weight:700; font-size:1rem; margin-bottom:4px; }
+    .card-desc  { font-size:.85rem; color:#444; }
+    .card-counts { margin-top:10px; display:flex; gap:8px; }
+    .badge { padding:2px 10px; border-radius:12px; font-size:.78rem; font-weight:600; color:#fff; }
+    .badge.high { background:#d32f2f; }
+    .badge.mid  { background:#f57c00; }
+    .badge.low  { background:#388e3c; }
+    section { background:#fff; border-radius:8px; padding:28px 32px;
+               margin-bottom:28px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    section h2 { font-size:1.15rem; font-weight:700; margin-bottom:8px; border-bottom:2px solid #e0e0e0; padding-bottom:8px; }
+    .section-desc { color:#555; font-size:.9rem; margin-bottom:16px; }
+    section h3 { font-size:.95rem; font-weight:700; margin:18px 0 8px; color:#1a237e; }
+    ul { padding-left:20px; }
+    ul li { font-size:.88rem; margin-bottom:4px; color:#333; }
+    .table-wrap { overflow-x:auto; margin-top:8px; }
+    table { border-collapse:collapse; width:100%; font-size:.8rem; }
+    th { background:#1a237e; color:#fff; padding:8px 12px; text-align:left; white-space:nowrap; }
+    td { padding:7px 12px; border-bottom:1px solid #e0e0e0; white-space:nowrap; }
+    .contact-section { background:#fff; border-radius:8px; padding:28px 32px;
+                        box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:28px; }
+    .contact-section h2 { font-size:1.1rem; font-weight:700; margin-bottom:16px; }
+    .contact-section a { color:#1565c0; text-decoration:none; }
+    .whois-section { background:#fff; border-radius:8px; padding:28px 32px;
+                      box-shadow:0 1px 4px rgba(0,0,0,.08); margin-bottom:28px;
+                      border-top:4px solid #d32f2f; }
+    .whois-section h2 { font-size:1.15rem; font-weight:700; margin-bottom:8px; }
+    footer { text-align:center; font-size:.78rem; color:#888; padding:24px; }
+    .exec-summary { background:#e8eaf6; border-left:5px solid #1a237e; border-radius:8px;
+                     padding:24px 32px; margin-bottom:32px; }
+    .exec-summary h2 { font-size:1rem; font-weight:700; color:#1a237e; margin-bottom:12px; }
+    .exec-summary ol { padding-left:20px; }
+    .exec-summary li { font-size:.9rem; margin-bottom:8px; color:#333; line-height:1.6; }
+  </style>
+</head>
+<body>
+<header>
+  <div style="text-align:right;font-size:.85rem;margin-bottom:8px;">
+    <a href="zh.html" style="color:#90caf9;">繁體中文</a> | English
+  </div>
+  <h1>🌐 RIR Network Security Alert Report</h1>
+  <p>Generated: 2026-05-26 14:10 &nbsp;|&nbsp; Coverage: APNIC &middot; RIPE NCC &middot; ARIN &middot; LACNIC &middot; AFRINIC</p>
+</header>
+<div class="container">
 
+  <div class="exec-summary">
+    <h2>📋 About This Report</h2>
+    <ol>
+      <li><strong>Data source</strong>: This report analyses public Delegation Extended records from all five Regional Internet Registries — APNIC, RIPE NCC, ARIN, LACNIC, and AFRINIC. Files are downloaded daily and processed by a statistical detection pipeline to flag anomalous Internet number resource acquisition patterns.</li>
+      <li><strong>What is detected</strong>: Five detection types (A–E) cover rapid IP accumulation, statistically anomalous ASN surges by country, cross-country resource holdings, large single allocations, and coordinated acquisition (ASN + IPv4 obtained by the same entity within 7 days). These signals correspond to pre-announcement behaviours — routing infrastructure setup, IP hoarding, or proxy concealment — occurring before any BGP route is ever advertised.</li>
+      <li><strong>Recommended actions</strong>: Prioritise High-risk items. For each flagged opaque_id, perform a WHOIS lookup to identify the holding entity, and monitor the associated IP blocks for BGP route announcements. If the holder cannot be verified, notify the relevant RIR security contact (listed at the bottom of this report) to initiate enhanced review.</li>
+    </ol>
+  </div>
+
+  <div class="kpi-bar">
+    <div class="kpi high"><div class="num">30</div><div class="label">High-Risk Alerts</div></div>
+    <div class="kpi mid"> <div class="num">3</div> <div class="label">Medium-Risk Alerts</div></div>
+    <div class="kpi low"> <div class="num">23</div> <div class="label">Low-Risk Alerts</div></div>
+    <div class="kpi">     <div class="num">56</div> <div class="label">Total Alerts</div></div>
+    <div class="kpi">     <div class="num">5</div><div class="label">Detection Types Triggered</div></div>
+  </div>
+
+  
+  <div class="whois-section">
+    <h2>🔍 WHOIS Lookup — High-Risk Items</h2>
+    <p class="section-desc">Automated WHOIS lookup results for each high-risk opaque_id. Use as a starting point for entity verification — always confirm WHOIS accuracy independently before escalating.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>opaque_id</th><th>Detection Type</th><th>Country</th>
+          <th>Queried</th><th>Entity Name</th><th>Description</th><th>Registered Country</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+          <td><code>F364AD7C</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>NG</td>
+          <td><code>102.202.80.0</code></td>
+          <td><strong>BLUNET-INTERNET</strong></td>
+          <td>BLUNET INTERNET SOLUTION LTD</td>
+          <td>NG</td>
+        </tr>
+        <tr>
+          <td><code>F36278FA</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>TZ</td>
+          <td><code>102.202.88.0</code></td>
+          <td><strong>Infinity-Communication-Limited</strong></td>
+          <td>Infinity Communication Limited</td>
+          <td>TZ</td>
+        </tr>
+        <tr>
+          <td><code>F363F81F</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>RW</td>
+          <td><code>102.202.79.0</code></td>
+          <td><strong>ENERGY_UTILITY_CORPORATION_EUCL_Ltd</strong></td>
+          <td>ENERGY UTILITY CORPORATION (EUCL) Ltd</td>
+          <td>RW</td>
+        </tr>
+        <tr>
+          <td><code>A915B536</code></td>
+          <td>C - Cross-Country Holdings</td>
+          <td>AU, CN, FJ, JP, KH, MN, MY, NZ, PK, TW</td>
+          <td><code>103.11.221.0</code></td>
+          <td><strong>ISC-AP</strong></td>
+          <td>Internet Systems Consortium</td>
+          <td>JP</td>
+        </tr>
+        <tr>
+          <td><code>A916CDAC</code></td>
+          <td>C - Cross-Country Holdings</td>
+          <td>AU, ID, IN, JP, NZ, PH, SG, TH, TW, US</td>
+          <td><code>140.83.0.0</code></td>
+          <td><strong>ORACLE-AU</strong></td>
+          <td>imported inetnum object for OCPL-1</td>
+          <td>AU</td>
+        </tr>
+        <tr>
+          <td><code>A917BEA1</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>PK</td>
+          <td><code>162.4.162.0</code></td>
+          <td><strong>TTCL-PK</strong></td>
+          <td>Trac &amp; Tel Communications (SMC-PVT) Ltd.</td>
+          <td>PK</td>
+        </tr>
+        <tr>
+          <td><code>A91E10B0</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>KH</td>
+          <td><code>162.4.174.0</code></td>
+          <td><strong>HSBMC-KH</strong></td>
+          <td>Hoeung Sun Boys Motor Co.,Ltd</td>
+          <td>KH</td>
+        </tr>
+        <tr>
+          <td><code>A91FB95D</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>BD</td>
+          <td><code>162.4.178.0</code></td>
+          <td><strong>RANINAGARONLINE-BD</strong></td>
+          <td>Raninagar Online</td>
+          <td>BD</td>
+        </tr>
+        <tr>
+          <td><code>A9165746</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>BD</td>
+          <td><code>162.4.186.0</code></td>
+          <td><strong>DHAKABANKPLC-BD</strong></td>
+          <td>Dhaka Bank PLC.</td>
+          <td>BD</td>
+        </tr>
+        <tr>
+          <td><code>A91A26B4</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>SG</td>
+          <td><code>162.4.172.0</code></td>
+          <td><strong>VAYNE-SG</strong></td>
+          <td>VAYNE NETWORK PTE. LTD.</td>
+          <td>SG</td>
+        </tr>
+        <tr>
+          <td><code>A91A9E90</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>PH</td>
+          <td><code>162.4.170.0</code></td>
+          <td><strong>RLINK-PH</strong></td>
+          <td>R-LINK NETWORK AND DATA SOLUTION</td>
+          <td>PH</td>
+        </tr>
+        <tr>
+          <td><code>A91F0500</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>IN</td>
+          <td><code>162.4.188.0</code></td>
+          <td><strong>SYSTIGRATOR-IN</strong></td>
+          <td>SYSTIGRATOR SOLUTIONS</td>
+          <td>IN</td>
+        </tr>
+        <tr>
+          <td><code>A91924F8</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>PH</td>
+          <td><code>162.4.184.0</code></td>
+          <td><strong>TNETPH-PH</strong></td>
+          <td>tNet Network and Data Solution</td>
+          <td>PH</td>
+        </tr>
+        <tr>
+          <td><code>A9198A90</code></td>
+          <td>E - Coordinated Acquisition</td>
+          <td>AU</td>
+          <td><code>162.4.155.0</code></td>
+          <td><strong>SWITCH-AU</strong></td>
+          <td>Switch Connect Pty Ltd</td>
+          <td>AU</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="cards">
+    
+        <div class="card" style="border-left:5px solid #f57c00;background:#fff3e0">
+          <div class="card-icon">🔴</div>
+          <div class="card-body">
+            <div class="card-title">A - Rapid IP Accumulation</div>
+            <div class="card-desc">Same entity accumulated large IPv4 volume within 90 days — possible attack infrastructure build-up</div>
+            <div class="card-counts">
+              <span class="badge high">High 0</span>
+              <span class="badge mid">Medium 1</span>
+              <span class="badge low">Low 10</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:5px solid #d32f2f;background:#ffebee">
+          <div class="card-icon">🟠</div>
+          <div class="card-body">
+            <div class="card-title">B - ASN Country Burst</div>
+            <div class="card-desc">Statistically anomalous surge in new ASNs from a specific country — possible coordinated action</div>
+            <div class="card-counts">
+              <span class="badge high">High 2</span>
+              <span class="badge mid">Medium 1</span>
+              <span class="badge low">Low 2</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:5px solid #d32f2f;background:#ffebee">
+          <div class="card-icon">🟡</div>
+          <div class="card-body">
+            <div class="card-title">C - Cross-Country Holdings</div>
+            <div class="card-desc">Same opaque_id holds resources across ≥5 countries — possible proxy concealment of true controller</div>
+            <div class="card-counts">
+              <span class="badge high">High 4</span>
+              <span class="badge mid">Medium 0</span>
+              <span class="badge low">Low 3</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:5px solid #f57c00;background:#fff3e0">
+          <div class="card-icon">🟠</div>
+          <div class="card-body">
+            <div class="card-title">D - Large Single Allocation</div>
+            <div class="card-desc">Single IPv4 allocation ≥/16 — high risk if assigned to an unknown entity</div>
+            <div class="card-counts">
+              <span class="badge high">High 0</span>
+              <span class="badge mid">Medium 1</span>
+              <span class="badge low">Low 8</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:5px solid #d32f2f;background:#ffebee">
+          <div class="card-icon">🔴</div>
+          <div class="card-body">
+            <div class="card-title">E - Coordinated Acquisition</div>
+            <div class="card-desc">Same entity acquired ASN + IPv4 within 7 days — consistent with routing infrastructure setup</div>
+            <div class="card-counts">
+              <span class="badge high">High 24</span>
+              <span class="badge mid">Medium 0</span>
+              <span class="badge low">Low 0</span>
+            </div>
+          </div>
+        </div>
+  </div>
+
+  
+        <section>
+          <h2>🔴 E - Coordinated Acquisition</h2>
+          <p class="section-desc">Same entity acquired ASN + IPv4 within 7 days — consistent with routing infrastructure setup</p>
+          <h3>Recommended Actions</h3>
+          <ul><li>Immediately track BGP route announcement status for related ASNs</li><li>Confirm whether ASN and IP applications were submitted by the same organization</li><li>If routes are already announced, notify downstream ISPs and RPKI validators</li><li>Assess whether this matches the precursor pattern of a BGP hijack</li></ul>
+          <h3>Alert List</h3>
+          
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>opaque_id</th><th>registry</th><th>Countries</th><th>New ASNs</th><th>New IPv4 Blocks</th><th>Total IPv4</th><th>First Date</th><th>Latest Date</th><th>Threat Level</th></tr></thead>
+        <tbody><tr style="background:#ffebee"><td>F364AD7C</td><td>afrinic</td><td>NG</td><td>1.0</td><td>1.0</td><td>1024.0</td><td>2026-05-20 00:00:00</td><td>2026-05-20 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>F36278FA</td><td>afrinic</td><td>TZ</td><td>1.0</td><td>1.0</td><td>1024.0</td><td>2026-05-20 00:00:00</td><td>2026-05-20 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>F363F81F</td><td>afrinic</td><td>RW</td><td>1.0</td><td>1.0</td><td>256.0</td><td>2026-05-21 00:00:00</td><td>2026-05-21 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A917BEA1</td><td>apnic</td><td>PK</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-21 00:00:00</td><td>2026-05-21 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91E10B0</td><td>apnic</td><td>KH</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-22 00:00:00</td><td>2026-05-24 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91FB95D</td><td>apnic</td><td>BD</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-22 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A9165746</td><td>apnic</td><td>BD</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-24 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91A26B4</td><td>apnic</td><td>SG</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-22 00:00:00</td><td>2026-05-22 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91A9E90</td><td>apnic</td><td>PH</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-21 00:00:00</td><td>2026-05-22 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91F0500</td><td>apnic</td><td>IN</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-25 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91924F8</td><td>apnic</td><td>PH</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-23 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A9198A90</td><td>apnic</td><td>AU</td><td>1.0</td><td>1.0</td><td>256.0</td><td>2026-05-20 00:00:00</td><td>2026-05-20 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>F364AD7C</td><td>afrinic</td><td>NG</td><td>1.0</td><td>1.0</td><td>1024.0</td><td>2026-05-20 00:00:00</td><td>2026-05-20 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>F36278FA</td><td>afrinic</td><td>TZ</td><td>1.0</td><td>1.0</td><td>1024.0</td><td>2026-05-20 00:00:00</td><td>2026-05-20 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>F363F81F</td><td>afrinic</td><td>RW</td><td>1.0</td><td>1.0</td><td>256.0</td><td>2026-05-21 00:00:00</td><td>2026-05-21 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A917BEA1</td><td>apnic</td><td>PK</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-21 00:00:00</td><td>2026-05-21 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91E10B0</td><td>apnic</td><td>KH</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-22 00:00:00</td><td>2026-05-24 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91FB95D</td><td>apnic</td><td>BD</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-22 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A9165746</td><td>apnic</td><td>BD</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-24 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91A26B4</td><td>apnic</td><td>SG</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-22 00:00:00</td><td>2026-05-22 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91A9E90</td><td>apnic</td><td>PH</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-21 00:00:00</td><td>2026-05-22 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91F0500</td><td>apnic</td><td>IN</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-25 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A91924F8</td><td>apnic</td><td>PH</td><td>1.0</td><td>1.0</td><td>512.0</td><td>2026-05-23 00:00:00</td><td>2026-05-25 00:00:00</td><td>High</td></tr><tr style="background:#ffebee"><td>A9198A90</td><td>apnic</td><td>AU</td><td>1.0</td><td>1.0</td><td>256.0</td><td>2026-05-20 00:00:00</td><td>2026-05-20 00:00:00</td><td>High</td></tr></tbody>
+      </table>
+    </div>
+        </section>
+
+        <section>
+          <h2>🟡 C - Cross-Country Holdings</h2>
+          <p class="section-desc">Same opaque_id holds resources across ≥5 countries — possible proxy concealment of true controller</p>
+          <h3>Recommended Actions</h3>
+          <ul><li>Review whether cross-country holdings comply with each RIR&#x27;s transfer policy</li><li>Verify the accuracy and completeness of WHOIS data</li><li>Consider requiring additional identity verification from the holder</li><li>Cross-reference the same opaque_id allocation records across other RIRs</li></ul>
+          <h3>Alert List</h3>
+          
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>opaque_id</th><th>registry</th><th>Countries</th><th>Threat Level</th><th>Country Count</th><th>Total IPs</th><th>Block Count</th><th>Latest Allocation</th><th>Days Ago</th></tr></thead>
+        <tbody><tr style="background:#ffebee"><td>A915B536</td><td>apnic</td><td>AU, CN, FJ, JP, KH, MN, MY, NZ, PK, TW</td><td>High</td><td>10.0</td><td>4608.0</td><td>11.0</td><td>2011-11-07 00:00:00</td><td>5314.0</td></tr><tr style="background:#ffebee"><td>A916CDAC</td><td>apnic</td><td>AU, ID, IN, JP, NZ, PH, SG, TH, TW, US</td><td>High</td><td>10.0</td><td>193280.0</td><td>17.0</td><td>2011-02-23 00:00:00</td><td>5571.0</td></tr><tr style="background:#ffebee"><td>A915B536</td><td>apnic</td><td>AU, CN, FJ, JP, KH, MN, MY, NZ, PK, TW</td><td>High</td><td>10.0</td><td>4608.0</td><td>11.0</td><td>2011-11-07 00:00:00</td><td>5314.0</td></tr><tr style="background:#ffebee"><td>A916CDAC</td><td>apnic</td><td>AU, ID, IN, JP, NZ, PH, SG, TH, TW, US</td><td>High</td><td>10.0</td><td>193280.0</td><td>17.0</td><td>2011-02-23 00:00:00</td><td>5571.0</td></tr><tr style="background:#e8f5e9"><td>A91C51D7</td><td>apnic</td><td>AU, BN, NL, NZ, PH, SG</td><td>Low</td><td>6.0</td><td>270592.0</td><td>23.0</td><td>2016-08-08 00:00:00</td><td>3578.0</td></tr><tr style="background:#e8f5e9"><td>A9192A47</td><td>apnic</td><td>AU, HK, JP, NL, SG</td><td>Low</td><td>5.0</td><td>12544.0</td><td>7.0</td><td>2015-07-10 00:00:00</td><td>3973.0</td></tr><tr style="background:#e8f5e9"><td>A91EE348</td><td>apnic</td><td>HK, IN, JP, KR, TW</td><td>Low</td><td>5.0</td><td>5888.0</td><td>11.0</td><td>2010-02-23 00:00:00</td><td>5936.0</td></tr></tbody>
+      </table>
+    </div>
+        </section>
+
+        <section>
+          <h2>🟠 B - ASN Country Burst</h2>
+          <p class="section-desc">Statistically anomalous surge in new ASNs from a specific country — possible coordinated action</p>
+          <h3>Recommended Actions</h3>
+          <ul><li>Contact the national NIC or relevant authority to verify ASN application legitimacy</li><li>Increase BGP monitoring for newly issued ASNs from the country</li><li>Share intelligence with MANRS routing-security initiative partners</li><li>Evaluate whether to raise the ASN application review threshold for that country</li></ul>
+          <h3>Alert List</h3>
+          
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>registry</th><th>New ASNs</th><th>Threat Level</th><th>country</th><th>z_score</th></tr></thead>
+        <tbody><tr style="background:#ffebee"><td>ripencc</td><td>29.0</td><td>High</td><td>GB</td><td>4.435304709336942</td></tr><tr style="background:#e8f5e9"><td>apnic</td><td>22.0</td><td>Low</td><td>IN</td><td>2.751211066683482</td></tr><tr style="background:#e8f5e9"><td>lacnic</td><td>16.0</td><td>Low</td><td>BR</td><td>2.70037403892955</td></tr><tr style="background:#ffebee"><td>ripencc</td><td>29.0</td><td>High</td><td>GB</td><td>4.435304709336942</td></tr><tr style="background:#fff3e0"><td>ripencc</td><td>22.0</td><td>Medium</td><td>RU</td><td>3.175982623378558</td></tr></tbody>
+      </table>
+    </div>
+        </section>
+
+        <section>
+          <h2>🔴 A - Rapid IP Accumulation</h2>
+          <p class="section-desc">Same entity accumulated large IPv4 volume within 90 days — possible attack infrastructure build-up</p>
+          <h3>Recommended Actions</h3>
+          <ul><li>Identify the entity name and business background linked to the opaque_id</li><li>Verify whether a legitimate operational need justifies the scale</li><li>Monitor BGP route announcements for the related IP blocks</li><li>If unverifiable, notify the relevant RIR for enhanced scrutiny</li></ul>
+          <h3>Alert List</h3>
+          
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>opaque_id</th><th>registry</th><th>Countries</th><th>First Date</th><th>Latest Date</th><th>Threat Level</th><th>Country Count</th><th>Days Ago</th><th>New Blocks</th><th>Accumulated IPs</th></tr></thead>
+        <tbody><tr style="background:#fff3e0"><td>9504b501ac244654cf137648a1455c51</td><td>arin</td><td>US</td><td>2026-05-18 00:00:00</td><td>2026-05-18 00:00:00</td><td>Medium</td><td>1.0</td><td>8.0</td><td>3.0</td><td>266496.0</td></tr><tr style="background:#e8f5e9"><td>38b893ecb59b7eb5bd34e2cc25928b8d</td><td>arin</td><td>US</td><td>2026-04-16 00:00:00</td><td>2026-04-16 00:00:00</td><td>Low</td><td>1.0</td><td>40.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>56ee0848404fb996e1938acdbd45b12d</td><td>arin</td><td>US</td><td>2026-04-03 00:00:00</td><td>2026-04-03 00:00:00</td><td>Low</td><td>1.0</td><td>53.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>65bd7b9b7ee21425843bcc8eaa3b98e4</td><td>arin</td><td>US</td><td>2026-03-19 00:00:00</td><td>2026-03-19 00:00:00</td><td>Low</td><td>1.0</td><td>68.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>96d8636ecbf4aa32b4d7227498d64ef1</td><td>arin</td><td>US</td><td>2026-04-17 00:00:00</td><td>2026-04-17 00:00:00</td><td>Low</td><td>1.0</td><td>39.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>a7f7463af3d337e567eb5d4bd3706831</td><td>arin</td><td>US</td><td>2026-03-02 00:00:00</td><td>2026-03-02 00:00:00</td><td>Low</td><td>1.0</td><td>85.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>b33e6baee4568ef20de7434c07ac6de8</td><td>arin</td><td>US</td><td>2026-03-02 00:00:00</td><td>2026-03-02 00:00:00</td><td>Low</td><td>1.0</td><td>85.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>c1dfdf31702f82b09bbfa8b6c3c6e73c</td><td>arin</td><td>US</td><td>2026-03-30 00:00:00</td><td>2026-03-30 00:00:00</td><td>Low</td><td>1.0</td><td>57.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>cd0f3b8e7d9444ab07dc47565abf4031</td><td>arin</td><td>US</td><td>2026-04-27 00:00:00</td><td>2026-04-27 00:00:00</td><td>Low</td><td>1.0</td><td>29.0</td><td>1.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>dfe5691a90248c23ff9317b3558eeace</td><td>arin</td><td>US</td><td>2026-03-06 00:00:00</td><td>2026-03-06 00:00:00</td><td>Low</td><td>1.0</td><td>81.0</td><td>3.0</td><td>65536.0</td></tr><tr style="background:#e8f5e9"><td>e9f843549cbf16d3f2cc14e6cdc2a0eb</td><td>arin</td><td>US</td><td>2026-04-10 00:00:00</td><td>2026-04-10 00:00:00</td><td>Low</td><td>1.0</td><td>46.0</td><td>2.0</td><td>65536.0</td></tr></tbody>
+      </table>
+    </div>
+        </section>
+
+        <section>
+          <h2>🟠 D - Large Single Allocation</h2>
+          <p class="section-desc">Single IPv4 allocation ≥/16 — high risk if assigned to an unknown entity</p>
+          <h3>Recommended Actions</h3>
+          <ul><li>Contact the allocating RIR to confirm applicant identity and stated purpose</li><li>Confirm the allocation passed normal resource request review procedures</li><li>Enable enhanced monitoring to track subsequent BGP route announcements</li><li>If route announcements appear within 30 days, escalate to high priority immediately</li></ul>
+          <h3>Alert List</h3>
+          
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>opaque_id</th><th>registry</th><th>Threat Level</th><th>country</th><th>Days Ago</th><th>type</th><th>start</th><th>value</th><th>CIDR Prefix</th><th>date</th></tr></thead>
+        <tbody><tr style="background:#fff3e0"><td>9504b501ac244654cf137648a1455c51</td><td>arin</td><td>Medium</td><td>US</td><td>8.0</td><td>ipv4</td><td>31.64.0.0</td><td>262144.0</td><td>/14</td><td>2026-05-18 00:00:00</td></tr><tr style="background:#e8f5e9"><td>96d8636ecbf4aa32b4d7227498d64ef1</td><td>arin</td><td>Low</td><td>US</td><td>39.0</td><td>ipv4</td><td>75.125.0.0</td><td>65536.0</td><td>/16</td><td>2026-04-17 00:00:00</td></tr><tr style="background:#e8f5e9"><td>a7f7463af3d337e567eb5d4bd3706831</td><td>arin</td><td>Low</td><td>US</td><td>85.0</td><td>ipv4</td><td>87.87.0.0</td><td>65536.0</td><td>/16</td><td>2026-03-02 00:00:00</td></tr><tr style="background:#e8f5e9"><td>65bd7b9b7ee21425843bcc8eaa3b98e4</td><td>arin</td><td>Low</td><td>US</td><td>68.0</td><td>ipv4</td><td>153.116.0.0</td><td>65536.0</td><td>/16</td><td>2026-03-19 00:00:00</td></tr><tr style="background:#e8f5e9"><td>56ee0848404fb996e1938acdbd45b12d</td><td>arin</td><td>Low</td><td>US</td><td>53.0</td><td>ipv4</td><td>155.44.0.0</td><td>65536.0</td><td>/16</td><td>2026-04-03 00:00:00</td></tr><tr style="background:#e8f5e9"><td>b33e6baee4568ef20de7434c07ac6de8</td><td>arin</td><td>Low</td><td>US</td><td>85.0</td><td>ipv4</td><td>155.183.0.0</td><td>65536.0</td><td>/16</td><td>2026-03-02 00:00:00</td></tr><tr style="background:#e8f5e9"><td>c1dfdf31702f82b09bbfa8b6c3c6e73c</td><td>arin</td><td>Low</td><td>US</td><td>57.0</td><td>ipv4</td><td>179.64.0.0</td><td>65536.0</td><td>/16</td><td>2026-03-30 00:00:00</td></tr><tr style="background:#e8f5e9"><td>38b893ecb59b7eb5bd34e2cc25928b8d</td><td>arin</td><td>Low</td><td>US</td><td>40.0</td><td>ipv4</td><td>189.25.0.0</td><td>65536.0</td><td>/16</td><td>2026-04-16 00:00:00</td></tr><tr style="background:#e8f5e9"><td>cd0f3b8e7d9444ab07dc47565abf4031</td><td>arin</td><td>Low</td><td>US</td><td>29.0</td><td>ipv4</td><td>201.79.0.0</td><td>65536.0</td><td>/16</td><td>2026-04-27 00:00:00</td></tr></tbody>
+      </table>
+    </div>
+        </section>
+
+  <div class="contact-section">
+    <h2>📬 RIR Security Contacts</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>RIR</th><th>Region</th><th>Security Contact</th><th>Website</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><strong>APNIC</strong></td>
+          <td>Asia Pacific</td>
+          <td><a href="mailto:security@apnic.net">security@apnic.net</a></td>
+          <td><a href="https://www.apnic.net" target="_blank">https://www.apnic.net</a></td>
+        </tr>
+        <tr>
+          <td><strong>RIPE NCC</strong></td>
+          <td>Europe / Middle East / CIS</td>
+          <td><a href="mailto:abuse@ripe.net">abuse@ripe.net</a></td>
+          <td><a href="https://www.ripe.net" target="_blank">https://www.ripe.net</a></td>
+        </tr>
+        <tr>
+          <td><strong>ARIN</strong></td>
+          <td>North America</td>
+          <td><a href="mailto:abuse@arin.net">abuse@arin.net</a></td>
+          <td><a href="https://www.arin.net" target="_blank">https://www.arin.net</a></td>
+        </tr>
+        <tr>
+          <td><strong>LACNIC</strong></td>
+          <td>Latin America / Caribbean</td>
+          <td><a href="mailto:abuse@lacnic.net">abuse@lacnic.net</a></td>
+          <td><a href="https://www.lacnic.net" target="_blank">https://www.lacnic.net</a></td>
+        </tr>
+        <tr>
+          <td><strong>AFRINIC</strong></td>
+          <td>Africa</td>
+          <td><a href="mailto:abuse@afrinic.net">abuse@afrinic.net</a></td>
+          <td><a href="https://www.afrinic.net" target="_blank">https://www.afrinic.net</a></td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+<footer>
+  Auto-generated by RIR Security Monitor &nbsp;|&nbsp; Data source: Public Delegation Extended files from each RIR
+</footer>
+</body>
+</html>
