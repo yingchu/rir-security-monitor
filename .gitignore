@@ -1,0 +1,7 @@
+rir_data/
+__pycache__/
+*.pyc
+.DS_Store
+*.xlsx
+*.html
+delegated-*.txt
