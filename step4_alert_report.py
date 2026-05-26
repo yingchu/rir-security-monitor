@@ -200,6 +200,8 @@ def render_whois_section(df: pd.DataFrame) -> str:
         name  = html.escape(info.get("name", "") or info.get("descr", ""))
         descr = html.escape(info.get("descr", ""))
         ctry  = html.escape(info.get("country", ""))
+        indicators = info.get("cidrs", []) + info.get("asns", [])
+        indicators_html = "<br>".join(f"<code>{html.escape(i)}</code>" for i in indicators[:15])
         rows.append(f"""
         <tr>
           <td><code>{html.escape(str(oid))}</code></td>
@@ -209,6 +211,7 @@ def render_whois_section(df: pd.DataFrame) -> str:
           <td><strong>{name}</strong></td>
           <td>{descr}</td>
           <td>{ctry}</td>
+          <td style="min-width:160px"><div style="max-height:80px;overflow-y:auto">{indicators_html}</div></td>
         </tr>""")
 
     if not rows:
@@ -222,7 +225,7 @@ def render_whois_section(df: pd.DataFrame) -> str:
       <table>
         <thead><tr>
           <th>opaque_id</th><th>偵測類型</th><th>國家</th>
-          <th>查詢對象</th><th>實體名稱</th><th>描述</th><th>登記國</th>
+          <th>查詢對象</th><th>實體名稱</th><th>描述</th><th>登記國</th><th>IP 區塊 / ASN</th>
         </tr></thead>
         <tbody>{"".join(rows)}</tbody>
       </table>

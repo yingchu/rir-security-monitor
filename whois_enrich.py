@@ -5,6 +5,7 @@ Uses each RIR's public RDAP endpoint — no system whois binary required.
 
 import time
 import re
+import math
 import requests
 from pathlib import Path
 from functools import lru_cache
@@ -23,6 +24,12 @@ RDAP_BASE = {
 
 _IPV4_RE = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 _ASN_RE  = re.compile(r"^\d{1,10}$")
+
+
+def _count_to_prefix(count: int) -> int:
+    if count <= 0:
+        return 32
+    return 32 - int(math.log2(max(count, 1)))
 
 
 def _validate_ip(ip: str) -> bool:
@@ -95,8 +102,8 @@ def _rdap_query(url: str) -> dict:
 
 
 def load_opaque_resources(rir_data_dir: Path, opaque_ids: set) -> dict:
-    """Return {opaque_id: {"ipv4": ..., "asn": ..., "registry": ...}}"""
-    result = {oid: {"ipv4": None, "asn": None, "registry": None} for oid in opaque_ids}
+    """Return {opaque_id: {"ipv4": ..., "asn": ..., "registry": ..., "cidrs": [...], "asns": [...]}}"""
+    result = {oid: {"ipv4": None, "asn": None, "registry": None, "cidrs": [], "asns": []} for oid in opaque_ids}
     for txt in rir_data_dir.glob("delegated-*-latest.txt"):
         with open(txt, encoding="utf-8", errors="ignore") as f:
             for line in f:
@@ -110,13 +117,25 @@ def load_opaque_resources(rir_data_dir: Path, opaque_ids: set) -> dict:
                 if oid not in opaque_ids:
                     continue
                 registry, rtype, start = parts[0], parts[2], parts[3]
-                if rtype == "ipv4" and result[oid]["ipv4"] is None:
-                    result[oid]["ipv4"]     = start
-                    result[oid]["registry"] = registry
-                elif rtype == "asn" and result[oid]["asn"] is None:
-                    result[oid]["asn"]      = start
-                    if result[oid]["registry"] is None:
+                try:
+                    value = int(parts[4])
+                except ValueError:
+                    value = 0
+                if rtype == "ipv4" and _validate_ip(start):
+                    cidr = f"{start}/{_count_to_prefix(value)}" if value > 0 else start
+                    if cidr not in result[oid]["cidrs"]:
+                        result[oid]["cidrs"].append(cidr)
+                    if result[oid]["ipv4"] is None:
+                        result[oid]["ipv4"]     = start
                         result[oid]["registry"] = registry
+                elif rtype == "asn" and _ASN_RE.match(start):
+                    asn_str = f"AS{start}"
+                    if asn_str not in result[oid]["asns"]:
+                        result[oid]["asns"].append(asn_str)
+                    if result[oid]["asn"] is None:
+                        result[oid]["asn"]      = start
+                        if result[oid]["registry"] is None:
+                            result[oid]["registry"] = registry
     return result
 
 
@@ -154,6 +173,8 @@ def enrich(opaque_ids: set, rir_data_dir: Path) -> dict:
         info["query"] = start
         info["ipv4"]  = res["ipv4"] or ""
         info["asn"]   = f"AS{res['asn']}" if res["asn"] else ""
+        info["cidrs"] = res.get("cidrs", [])
+        info["asns"]  = res.get("asns", [])
         enriched[oid] = info
 
     return enriched
