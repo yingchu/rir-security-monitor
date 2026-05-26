@@ -127,17 +127,12 @@ def detect_asn_burst(df: pd.DataFrame, days: int = 30,
 
     country_asn = asn_df.groupby(["registry", "country"]).size().reset_index(name="新增ASN數")
 
-    # 同一 registry 內做 z-score
-    def add_zscore(grp):
-        if len(grp) < 3:
-            grp["z_score"] = 0.0
-            return grp
-        mean = grp["新增ASN數"].mean()
-        std = grp["新增ASN數"].std()
-        grp["z_score"] = (grp["新增ASN數"] - mean) / std if std > 0 else 0.0
-        return grp
+    def calc_zscore(x):
+        if len(x) < 3 or x.std() == 0:
+            return pd.Series(0.0, index=x.index)
+        return (x - x.mean()) / x.std()
 
-    country_asn = country_asn.groupby("registry", group_keys=False).apply(add_zscore)
+    country_asn["z_score"] = country_asn.groupby("registry")["新增ASN數"].transform(calc_zscore)
     alerts = country_asn[country_asn["z_score"] >= z_threshold].sort_values("z_score", ascending=False)
     alerts["威脅等級"] = alerts["z_score"].apply(
         lambda z: "高" if z >= 4.0 else ("中" if z >= 3.0 else "低")
