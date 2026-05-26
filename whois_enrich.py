@@ -152,6 +152,8 @@ def enrich(opaque_ids: set, rir_data_dir: Path) -> dict:
 
         info = _rdap_query(url)
         info["query"] = start
+        info["ipv4"]  = res["ipv4"] or ""
+        info["asn"]   = f"AS{res['asn']}" if res["asn"] else ""
         enriched[oid] = info
 
     return enriched
