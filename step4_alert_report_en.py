@@ -352,6 +352,9 @@ def generate_html(df: pd.DataFrame) -> str:
 </head>
 <body>
 <header>
+  <div style="text-align:right;font-size:.85rem;margin-bottom:8px;">
+    <a href="zh.html" style="color:#90caf9;">繁體中文</a> | English
+  </div>
   <h1>🌐 RIR Network Security Alert Report</h1>
   <p>Generated: {run_time} &nbsp;|&nbsp; Coverage: APNIC &middot; RIPE NCC &middot; ARIN &middot; LACNIC &middot; AFRINIC</p>
 </header>

@@ -322,6 +322,9 @@ def generate_html(df: pd.DataFrame) -> str:
 </head>
 <body>
 <header>
+  <div style="text-align:right;font-size:.85rem;margin-bottom:8px;">
+    繁體中文 | <a href="index.html" style="color:#90caf9;">English</a>
+  </div>
   <h1>🌐 RIR 網路安全預警報告</h1>
   <p>產生時間：{run_time} ｜ 涵蓋 RIR：APNIC・RIPE NCC・ARIN・LACNIC・AFRINIC</p>
 </header>
