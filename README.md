@@ -2,6 +2,8 @@
 
 # RIR Security Monitor
 
+**[→ Live Demo Report](https://yingchu.github.io/rir-security-monitor/)**
+
 Early-warning pipeline for anomalous Internet number resource acquisition across all five Regional Internet Registries (RIRs): **APNIC, RIPE NCC, ARIN, LACNIC, AFRINIC**.
 
 ## Why This Exists
